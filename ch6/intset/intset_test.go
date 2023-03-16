@@ -5,7 +5,6 @@ package intset
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -134,15 +133,4 @@ func TestElems(t *testing.T) {
 	x.Add(42)
 
 	fmt.Println(x.Elems())
-}
-
-func TestReflect(t *testing.T) {
-	a := int32(10)
-	valueA := reflect.ValueOf(a)
-	fmt.Printf("valueA :%v\n", valueA.CanSet())
-	b := int32(100)
-	valuePtrB := reflect.ValueOf(&b)
-	fmt.Printf("valuePtrB:%v Elem:%v\n", valuePtrB.CanSet(), valuePtrB.Elem().CanSet())
-	valuePtrB.Elem().Set(reflect.ValueOf(int32(200)))
-	fmt.Printf("b:%v Elem:%v\n", b, valuePtrB.Elem())
 }
