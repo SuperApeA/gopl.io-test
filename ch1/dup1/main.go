@@ -17,6 +17,8 @@ import (
 func main() {
 	counts := make(map[string]int)
 	input := bufio.NewScanner(os.Stdin)
+	//只有遇到EOF和错误的时候才会停止
+	//手动引发EOF：在windows下可以使用ctrl + z，在linux下可以使用ctrl + d
 	for input.Scan() {
 		counts[input.Text()]++
 	}
