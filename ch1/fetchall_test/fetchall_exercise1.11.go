@@ -1,10 +1,3 @@
-// Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
-// License: https://creativecommons.org/licenses/by-nc-sa/4.0/
-
-// See page 17.
-//!+
-
-// Fetchall fetches URLs in parallel and reports their times and sizes.
 package main
 
 import (
@@ -13,37 +6,45 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
+	"sync"
 	"time"
 )
 
+const timeout = 3 * time.Second
+
 func main() {
 	start := time.Now()
-	ch := make(chan string)
+	var wg sync.WaitGroup
 	for _, url := range os.Args[1:] {
-		go fetch11(url, ch) // start a goroutine
+		wg.Add(1)
+		go fetchUrl(url, &wg)
 	}
-	for range os.Args[1:] {
-		fmt.Println(<-ch) // receive from channel ch
-	}
+	wg.Wait()
 	fmt.Printf("%.2fs elapsed\n", time.Since(start).Seconds())
 }
 
-func fetch11(url string, ch chan<- string) {
+func fetchUrl(url string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	start := time.Now()
-	resp, err := http.Get(url)
+	client := &http.Client{Timeout: timeout}
+
+	if !strings.HasPrefix(url, "http") {
+		url = "https://" + url
+	}
+
+	resp, err := client.Get(url)
 	if err != nil {
-		ch <- fmt.Sprint(err) // send to channel ch
+		fmt.Println(err)
 		return
 	}
 
-	nbytes, err := io.Copy(ioutil.Discard, resp.Body)
+	nBytes, err := io.Copy(ioutil.Discard, resp.Body)
 	resp.Body.Close() // don't leak resources
 	if err != nil {
-		ch <- fmt.Sprintf("while reading %s: %v", url, err)
+		fmt.Printf("while reading %s: %v\n", url, err)
 		return
 	}
 	secs := time.Since(start).Seconds()
-	ch <- fmt.Sprintf("%.2fs  %7d  %s", secs, nbytes, url)
+	fmt.Printf("%.2fs  %7d  %s\n", secs, nBytes, url)
 }
-
-//!-
